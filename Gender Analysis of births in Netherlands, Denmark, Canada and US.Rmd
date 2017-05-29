@@ -1,0 +1,242 @@
+
+##### Setup: #####
+
+In this problem set you will need, at minimum, the following R packages.
+
+```{r Setup, message=FALSE, warning=FALSE}
+# Load standard libraries
+library(tidyverse)
+library(Sleuth3) # Contains data for problemset
+library(UsingR) # Contains data for problemset
+library(MASS) # Modern applied statistics functions
+```
+
+\benum
+\item Davis et al. (1998) collected data on the proportion of births that were male in Denmark, the Netherlands, Canada, and the United States for selected years. Davis et al. argue that the proportion of male births is declining in these countries. We will explore this hypothesis. You can obtain this data as follows:
+
+```{r}
+#Add data into a data frame
+
+birthTable_df <- tbl_df(ex0724)
+
+```
+
+\bitem
+\item[(a)] Use the \texttt{lm} function in \textbf{R} to fit four (one per country) simple linear regression models of the yearly proportion of males births as a function of the year and obtain the least squares fits. Write down the estimated linear model for each country.
+
+```{r}
+attach(birthTable_df)
+
+#lm model for Denmark
+denmarkProportion <- lm(Denmark ~ Year)
+
+denmarkProportion
+
+ggplot(denmarkProportion, aes(x=Year, y = Denmark)) + geom_point() + geom_smooth(method = lm)
+
+#lm model for Netherlands
+nethlandsProportion <- lm(Netherlands ~ Year)
+nethlandsProportion
+ggplot(nethlandsProportion, aes(x=Year, y = Netherlands)) + geom_point() + geom_smooth(method = lm)
+
+#lm model for Canada
+canadaProportion <- lm(Canada ~ Year)
+canadaProportion
+ggplot(canadaProportion, aes(x=Year, y = Canada)) + geom_point() + geom_smooth(method = lm)
+
+#lm model for USA
+usaProportion <- lm(USA ~ Year)
+usaProportion
+ggplot(usaProportion, aes(x=Year, y = USA)) + geom_point() + geom_smooth(method = lm)
+
+```
+
+Estimated linear model for each of the countires
+
+birthProportionDenmark = (-4.289e-05 ) Year + 5.987e-01
+birthProportionNethrlands = (-8.084e-05) Year + 6.724e-01
+birthProportionCanada = ( -0.000111)Year + 0.7337857
+birthProportionUSA = (-5.429e-05)Year + 6.201e-01
+
+
+\item[(b)] Obtain the $t$-statistic for the test that the slopes of the regression lines are zero, for each of the four countries. Is there evidence that the proportion of births that are male is truly declining over this period?
+
+```{r}
+summary(denmarkProportion)
+summary(nethlandsProportion)
+summary(canadaProportion)
+summary(usaProportion)
+```
+ 1.439e-05
+P-values
+denmark: 0.0442
+netherlands: 9.637e-07
+Canada:0.0007376
+USA:  1.439e-05
+
+For the null hypothesis to be true (for the birthrate to stay constant), the p value is a lot less that 0.05 which indicates that the birth rates are declining in each of the 4 countries. 
+
+\eitem
+
+\item Regression was originally used by Francis Galton to study the relationship between parents and children. One relationship he considered was height. Can we predict a man's height based on the height of his father? This is the question we will explore in this problem. You can obtain data similar to that used by Galton as follows:
+x`x`
+```{r}
+# Import and look at the height data
+heightData <- tbl_df(get("father.son"))
+```
+
+\bitem
+\item[(a)] Perform an exploratory analysis of the dataset. Describe what you find. At a minimum you should produce statistical summaries of the variables, a visualization of the relationship of interest in this problem, and a statistical summary of that relationship. 
+ 
+```{r}
+str(heightData)
+
+dim(heightData)
+```
+
+There are 1078 rows of height data with two columns that represent the heights of father and son. The data type for all columns in this data set is num.
+ 
+Lets view the distribution and the min and max values
+```{r}
+summary(heightData)
+sd(heightData$fheight)
+sd(heightData$sheight)
+```
+
+From the results we observe the following.
+THe mean of father heigh is 67.69 and the mean of son is 68.68. The standard deviation of son data is greater than father data.
+
+```{r}
+#Plotting sons' heights against fathers' heights
+plot(heightData$sheight ~ heightData$fheight
+     , main = "Height of Son versus Father"
+     , ylab = "Son's height (in inches)"
+     , xlab = "Father's height (in inches)")
+```
+ 
+The visualization suggests that there is an increase in son height with an incrase in father height. We shall calculated the correlation between the father and son variables.
+
+```{r}
+
+cor.test(heightData$fheight, heightData$sheight)
+
+```
+
+From the correlation test we can see that the value is 0.5013383 which indicates that there is a correlation between fathers height and sons height.
+
+\item[(b)] Use the \texttt{lm} function in R to fit a simple linear regression model to predict son's height as a function of father's height.  Write down the model, $$\hat{y}_{\mbox{\texttt{sheight}}} = \hat{\beta}_0 + \hat{\beta_i} \times \mbox{\texttt{fheight}}$$ filling in estimated coefficient values and interpret the coefficient estimates. 
+
+```{r}
+#Fit a linear regression model for the height dataset
+
+attach(heightData)
+lmHeight <- lm(sheight ~ fheight)
+lmHeight
+```
+
+The coeffecient is : 0.5141
+Intercept is : 33.8866
+
+The linear regression model is: sheight = (0.5141)fheight + 33.8866.
+
+The coeffcients suggest that for every unit increase of father height the son height increases by a factor of 0.5141 of the father height and an addtion of 33.8866.
+
+\item[(c)] Find the 95\% confidence intervals for the estimates. You may find the \texttt{confint()} command useful.
+
+```{r}
+#Find the confidence intervals for the estimates
+confint(lmHeight,level = 0.95)
+
+```
+
+Confidence intervals of 95 % is the intervals between which 95% of the obsevations lie within.
+
+From the confidence intervals estimate we can say that 95% of observations lie between.
+
+sheight = (0.4610188)fheight + 30.2912126 and 
+sheight = (0.5671673)fheight + 37.4819961
+
+\item[(d)] Produce a visualization of the data and the least squares regression line.
+
+```{r}
+#Plotting sons vs father heights
+plot(heightData$sheight ~ heightData$fheight
+     , main = "Height of Son versus Father"
+     , ylab = "Son's height (inches)"
+     , xlab = "Father's height (inches)")
+#Drawing the least squares regression line
+abline(lmHeight, col = "blue")
+```
+
+\item[(e)] Produce a visualization of the residuals versus the fitted values. (You can inspect the elements of the linear model object in R using \texttt{names()}). Discuss what you see. Do you have any concerns about the linear model?  
+
+```{r}
+#Inspect tnames of the elements of the linear model
+names(lmHeight)
+```
+Use the residuals and fitter.values to produce a visualization.
+
+```{r}
+plot(lmHeight$residuals ~ lmHeight$fitted.values,
+     main="Residuals vs Fitted Values",ylab ="Residuals",xlab="Fitterd Values")
+```
+
+The plot shows that the residuals are symmetrically distributed around 0 but there is no noticeable relation between the fitted values and the residuals.
+ Let's take a corrlation test to obsever the relation between fitted values and residuals.
+ 
+```{r}
+ #Correlation test for fitted variables and residuals
+cor.test(lmHeight$residuals,lmHeight$fitted.values)
+```
+
+THe p value is 1 which indicates that the null hypothesis is true for all cases and there is absolutely no relation between residuals and fitted values.
+
+\item[(f)] Using the model you fit in part (b) predict the height was 5 males whose father are 50, 55, 70, 75, and 90 inches respectively. You may find the \texttt{predict()} function helpful.
+
+
+```{r}
+#Add the data set to aa vector
+fatherHeight <- data.frame(fheight <-c(50,55,70,75,90))
+```
+
+Now predict values according to the linear model by using the predict function
+
+```{r}
+predict(lmHeight,fatherHeight,interval = "predict")
+```
+
+The result is a table which shows the fitted values for sons height correspoinding to the fathers heights. It also shows the upper and lower values which falls within the confidence level of our linear model. For example for father with height 50, the sons height will be 59.59126 as fitted by the value and the confidence levels for sons heights will lie between 54.71685 and 64.46566. 
+\eitem
+
+\item \textbf{Extra Credit:}
+
+\bitem
+\item[(a)] What assumptions are made about the distribution of the explanatory variable in the normal simple linear regression model?
+
+Looking at the distribution we cannot make any assumptions of the values the explanatory variable can take. It can be any numberical value. The explanatory variable can vary vastly with even a small change in response variable and that makes it difficult to make any assumptions about the distribution.
+
+\item[(b)] Why can an $R^2$ close to one not be used as evidence that the simple linear regression model is appropriate?
+
+A $R^2$ value close to one makes a better fit for a linear model. However if there are certain biases in the dataset it can cause the regression line to be curved. but the linear regression will not give the same picture as this specific dataset and it will either over estimate or under estimated the model in order to maintain the linearity. Hence for this case even a $R^2$ value close to 1 cannot be use as evidence that the simple linear regression model is appropriate.
+
+
+\item[(c)] Consider a regression of weight on height for a sample of adult males. Suppose the intercept is 5 kg. Does this imply that males of height 0 weigh 5 kg, on average? Would this imply that the simple linear regression model is meaningless?
+
+The regression line extends in both direction infinitely and is a apt fit for predictinig values. The line will have a 0 intercept but in a practical sense there would not be a value of 0. For example in the example we worked on there would never be a value of 0 as height. But for a s
+pecific range of values the linear regression model would definitley be useful in predicting outcomes and this means that the model is not meaningless.
+
+\item[(d)] Suppose you had data on pairs $(X,Y)$ which gave the scatterplot been below. How would you approach the analysis?
+
+I would first begin ananlysis by observation. From observation is seems that there is no deductible relationship between explanatory variable and response variable and hence there would need to calculate correlation and create a linear regression model.
+
+I would then calculate the correlatin between the two variables to see the strength of the relationship. Depending on the correlation we can either accept or reject the null hypothesis which means there is no relation between the two variables.
+
+In addtion I would try and fit a linear model to see and recognize any pattern in the values between the two variables. Over this I will use a plot between the residuals and fitted values of the model to deduct if the linear model is a good fit. 
+
+![Scatterplot for Extra Credit (d).](scatterplot.png)
+
+
+
+\eitem
+
+\eenum
